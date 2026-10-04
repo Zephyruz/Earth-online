@@ -117,13 +117,13 @@ export const GachaResultModal = ({ results, animations, canRepeatTen, onRepeatTe
           <div className="card-arrival-shell" key={`${current.card.id}-${currentIndex}`}>
             <div className="arriving-card"><CardArt card={current.card} trained={false} /></div>
           </div>
-          <div className="single-card-copy"><small>{current.result.isNew ? "NEW MEMBER" : `${current.result.rarity}★ MEMBER`}</small><strong>{current.card.character}</strong><span>「{current.card.title}」</span><em>{hasNextReveal ? highRarityOnly ? "轻触查看下一张高稀有卡" : "轻触查看下一张" : "轻触查看招募结果"}</em></div>
+          <div className="single-card-copy"><small>{current.result.isNew ? "NEW MEMBER" : `${current.result.rarity}★ MEMBER`}</small><strong>{current.card.character}</strong><span>「{current.card.title}」</span>{!current.result.isNew && <b>重复成员 · 心愿碎片 +{current.result.wishPieces ?? 0}</b>}<em>{hasNextReveal ? highRarityOnly ? "轻触查看下一张高稀有卡" : "轻触查看下一张" : "轻触查看招募结果"}</em></div>
         </>}
       </div>}
 
       {phase === "summary" && <div className="gacha-summary">
         <div className="section-head"><div><p className="eyebrow">RECRUIT RESULT</p><h3>招募结果</h3></div><span>{results.filter((item) => item.isNew).length} 张新卡</span></div>
-        <div className="gacha-summary-grid">{cards.map(({ result, card }, index) => <button key={`${result.cardId}-${index}`} className={`result-card rarity-result-${result.rarity}`} onClick={() => setDetailCard(card)}><CardArt card={card} trained={false} /><div><b>{result.isNew ? "NEW" : `${result.rarity}★`}</b><strong>{card.character}</strong><small>「{card.title}」</small><em>点击查看卡面</em></div></button>)}</div>
+        <div className="gacha-summary-grid">{cards.map(({ result, card }, index) => <button key={`${result.cardId}-${index}`} className={`result-card rarity-result-${result.rarity}`} onClick={() => setDetailCard(card)}><CardArt card={card} trained={false} /><div><b>{result.isNew ? "NEW" : `碎片 +${result.wishPieces ?? 0}`}</b><strong>{card.character}</strong><small>「{card.title}」</small><em>点击查看卡面</em></div></button>)}</div>
         <div className="modal-actions">{results.length === 10 && <button className="ghost" disabled={!canRepeatTen} onClick={() => { stopGachaMusic(); onRepeatTen(); }}>再来 10 发 · 3000</button>}<button onClick={closeResults}>收下卡牌</button></div>
       </div>}
       {detailCard && <CardDetailModal card={detailCard} onClose={() => setDetailCard(null)} />}

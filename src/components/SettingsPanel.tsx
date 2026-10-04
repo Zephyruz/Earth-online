@@ -9,9 +9,10 @@ interface Props {
   onImport: (text: string) => void;
   onReset: () => void;
   onGrantTestCrystals: () => void;
+  onGrantTestMaterials: () => void;
 }
 
-export const SettingsPanel = ({ game, onChange, onImport, onReset, onGrantTestCrystals }: Props) => {
+export const SettingsPanel = ({ game, onChange, onImport, onReset, onGrantTestCrystals, onGrantTestMaterials }: Props) => {
   const [testingMusic, setTestingMusic] = useState(false);
   useEffect(() => () => stopGachaMusic(), []);
   const update = (next: GameState) => onChange(next);
@@ -55,6 +56,7 @@ export const SettingsPanel = ({ game, onChange, onImport, onReset, onGrantTestCr
       <div className="card-actions">
         <button className={testingMusic ? "ghost" : ""} onClick={toggleMusicTest}>{testingMusic ? "停止试听音乐" : "试听抽卡音乐"}</button>
         <button onClick={onGrantTestCrystals}>补充 300,000 测试水晶</button>
+        <button onClick={onGrantTestMaterials}>补充测试养成材料</button>
         <button onClick={exportFile}>导出存档</button>
         <label className="file-button">导入存档<input type="file" accept="application/json" onChange={importFile} /></label>
         <button className="danger" onClick={onReset}>重置全部数据</button>
@@ -62,7 +64,7 @@ export const SettingsPanel = ({ game, onChange, onImport, onReset, onGrantTestCr
       <div className="subpanel">
         <h3>版本与说明</h3>
         <p>版本 {game.version}。所有数据保存在当前浏览器的 localStorage 中，不需要登录或服务器。</p>
-        <p>任务奖励已切换为水晶。卡牌资料与图片来源独立于存档，后续可替换为本地素材包。</p>
+        <p>任务会产出水晶、练习乐谱与奇迹结晶；重复成员转化为心愿碎片。测试补给只用于调试，不计入任务统计。</p>
       </div>
     </section>
   );

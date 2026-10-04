@@ -14,10 +14,12 @@ import { Sidebar } from "./components/Sidebar";
 import { TaskList } from "./components/TaskList";
 import { Toast } from "./components/Toast";
 import { TopBar } from "./components/TopBar";
-import { systemTips, taskTypeLabels, TEST_CRYSTAL_GRANT } from "./data/defaults";
+import { DailyLivePanel } from "./components/DailyLivePanel";
+import { OshiPanel } from "./components/OshiPanel";
+import { cardPool, systemTips, taskTypeLabels, TEST_CRYSTAL_GRANT } from "./data/defaults";
 import { useGameState } from "./hooks/useGameState";
 import { CardPull, Character, PageKey, Task, TaskType } from "./types/game";
-import { addInteraction, checkIn, completeTask, deleteCharacter, deleteTask, drawGacha, exchangeFeaturedCard, exchangeVoucher, undoTask, upsertCharacter, upsertTask } from "./utils/gameLogic";
+import { addInteraction, advanceTaskProgress, checkIn, completeTask, deleteCharacter, deleteTask, drawGacha, exchangeFeaturedCard, exchangeVoucher, undoTask, upsertCharacter, upsertTask } from "./utils/gameLogic";
 import { importSave, resetGame } from "./utils/storage";
 import { todayKey } from "./utils/date";
 import { startGachaMusic } from "./utils/gachaAudio";
@@ -96,11 +98,19 @@ export default function App() {
   const weeklyTasks = game.tasks.filter((task) => task.type === "weekly");
   const completion = todayTasks.length ? Math.round((todayTasks.filter((task) => task.completed).length / todayTasks.length) * 100) : 0;
   const statusText = completion === 0 ? "仍在加载中" : completion <= 30 ? "缓慢启动" : completion <= 60 ? "稳定运行" : completion <= 90 ? "状态良好" : "完美通关";
+  const nextDailyTasks = todayTasks.filter((task) => !task.completed).slice(0, 3);
+  const remainingDailyCrystals = todayTasks.filter((task) => !task.completed).reduce((sum, task) => sum + task.crystalReward, 0);
+  const completeOrAdvance = (task: Task) => {
+    updateGame((state) => task.target ? advanceTaskProgress(state, task.id) : completeTask(state, task.id));
+    notify(task.target ? "任务进度已推进" : "任务完成，奖励已发放");
+  };
 
   const home = (
-    <div className="page-grid">
+    <div className="page-grid home-dashboard">
       <PlayerCard player={game.player} />
-      <section className="panel">
+      <OshiPanel game={game} onChange={(focusCharacter) => updateGame((state) => ({ ...state, settings: { ...state.settings, focusCharacter } }))} />
+      <DailyLivePanel game={game} />
+      <section className="panel today-overview">
         <div className="section-head"><h2>今日概览</h2><button disabled={game.player.lastCheckInDate === todayKey()} onClick={() => { updateGame(checkIn); notify("签到完成"); }}>今日签到</button></div>
         <div className="stats-grid">
           <div><strong>{todayTasks.filter((task) => task.completed).length}/{todayTasks.length}</strong><span>今日任务</span></div>
@@ -111,7 +121,12 @@ export default function App() {
           <div><strong>{game.player.currentStreak}</strong><span>连续签到</span></div>
         </div>
       </section>
-      <section className="panel">
+      <section className="panel quick-quests">
+        <div className="section-head"><div><p className="eyebrow">NEXT QUEST</p><h2>接下来做什么</h2></div><span>剩余可得 ◇ {remainingDailyCrystals}</span></div>
+        <div className="quick-quest-list">{nextDailyTasks.map((task) => <button key={task.id} onClick={() => completeOrAdvance(task)}><span>{task.target ? `${task.progress ?? 0}/${task.target}` : "✓"}</span><div><strong>{task.title}</strong><small>水晶 +{task.crystalReward} · 乐谱 +{task.practiceReward}</small></div><b>{task.target ? "+1" : "完成"}</b></button>)}</div>
+        {nextDailyTasks.length === 0 && <div className="empty">今天的每日任务已经全部完成。FULL COMBO！</div>}
+      </section>
+      <section className="panel run-stats">
         <h2>运行统计</h2>
         <div className="stats-grid">
           <div><strong>{game.statistics.completedTasks}</strong><span>完成任务</span></div>
@@ -120,7 +135,7 @@ export default function App() {
           <div><strong>{game.characters.length}</strong><span>关系人物</span></div>
         </div>
       </section>
-      <section className="panel">
+      <section className="panel recent-adventure">
         <h2>近期冒险</h2>
         <AdventureLog logs={game.logs.slice(0, 5)} />
       </section>
@@ -130,12 +145,13 @@ export default function App() {
   const tasks = (
     <section className="panel">
       <div className="section-head"><h2>任务</h2><button onClick={() => setTaskModal("new")}>新增任务</button></div>
+      <div className="quest-economy-strip"><span>今日完成 <strong>{todayTasks.filter((task) => task.completed).length}/{todayTasks.length}</strong></span><span>今日获得 <strong>◇ {game.statistics.todayCrystals}</strong></span><span>养成库存 <strong>♫ {game.player.practiceScore.toLocaleString()} · ✧ {game.player.miracleGems}</strong></span></div>
       <div className="filters">
-        <select value={taskType} onChange={(e) => setTaskType(e.target.value as "all" | TaskType)}><option value="all">全部类型</option>{taskOrder.map((type) => <option key={type} value={type}>{taskTypeLabels[type]}</option>)}</select>
-        <select value={taskStatus} onChange={(e) => setTaskStatus(e.target.value as "all" | "todo" | "done")}><option value="all">全部状态</option><option value="todo">未完成</option><option value="done">已完成</option></select>
-        <select value={sort} onChange={(e) => setSort(e.target.value)}><option value="created">创建时间</option><option value="difficulty">难度</option><option value="reward">奖励</option><option value="deadline">截止日期</option></select>
+        <select aria-label="筛选任务类型" value={taskType} onChange={(e) => setTaskType(e.target.value as "all" | TaskType)}><option value="all">全部类型</option>{taskOrder.map((type) => <option key={type} value={type}>{taskTypeLabels[type]}</option>)}</select>
+        <select aria-label="筛选任务状态" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value as "all" | "todo" | "done")}><option value="all">全部状态</option><option value="todo">未完成</option><option value="done">已完成</option></select>
+        <select aria-label="任务排序方式" value={sort} onChange={(e) => setSort(e.target.value)}><option value="created">创建时间</option><option value="difficulty">难度</option><option value="reward">奖励</option><option value="deadline">截止日期</option></select>
       </div>
-      <TaskList tasks={filteredTasks} onComplete={(id) => { updateGame((state) => completeTask(state, id)); notify("任务完成，奖励已发放"); }} onUndo={(id) => { updateGame((state) => undoTask(state, id)); notify("已撤销任务奖励"); }} onEdit={setTaskModal} onDelete={(id) => setConfirm({ title: "删除任务", message: "确定删除这个任务吗？", action: () => { updateGame((state) => deleteTask(state, id)); notify("任务已删除"); } })} />
+      <TaskList tasks={filteredTasks} onComplete={(id) => { updateGame((state) => completeTask(state, id)); notify("任务完成，奖励已发放"); }} onAdvance={(id) => { updateGame((state) => advanceTaskProgress(state, id)); notify("任务进度已推进"); }} onUndo={(id) => { updateGame((state) => undoTask(state, id)); notify("已撤销任务奖励"); }} onEdit={setTaskModal} onDelete={(id) => setConfirm({ title: "删除任务", message: "确定删除这个任务吗？", action: () => { updateGame((state) => deleteTask(state, id)); notify("任务已删除"); } })} />
     </section>
   );
 
@@ -161,13 +177,13 @@ export default function App() {
         <TopBar tip={tip} />
         {page === "home" && home}
         {page === "tasks" && tasks}
-        {page === "gacha" && <GachaPanel game={game} onDraw={requestDraw} onVoucher={() => { try { setGame(exchangeVoucher(game)); notify("已兑换 1 张限定招募券"); } catch (error) { notify(error instanceof Error ? error.message : "兑换失败"); } }} onExchange={(cardId) => setConfirm({ title: "兑换四星卡牌", message: "将优先使用 300 枚贴纸；不足时使用 200 枚贴纸＋10 张限定招募券。确认兑换吗？", action: () => { try { setGame(exchangeFeaturedCard(game, cardId)); notify("卡牌兑换成功"); } catch (error) { notify(error instanceof Error ? error.message : "兑换失败"); } } })} />}
+        {page === "gacha" && <GachaPanel game={game} onDraw={requestDraw} onVoucher={() => { try { setGame(exchangeVoucher(game)); notify("已兑换 1 张限定招募券"); } catch (error) { notify(error instanceof Error ? error.message : "兑换失败"); } }} onTarget={(targetCardId) => { const target = cardPool.find((card) => card.id === targetCardId); updateGame((state) => ({ ...state, settings: { ...state.settings, targetCardId, focusCharacter: target?.character ?? state.settings.focusCharacter } })); notify("已设为目标成员"); }} onExchange={(cardId) => setConfirm({ title: "兑换四星卡牌", message: "将优先使用 300 枚贴纸；不足时使用 200 枚贴纸＋10 张限定招募券。确认兑换吗？", action: () => { try { setGame(exchangeFeaturedCard(game, cardId)); notify("卡牌兑换成功"); } catch (error) { notify(error instanceof Error ? error.message : "兑换失败"); } } })} />}
         {page === "collection" && <CardCollection game={game} />}
-        {page === "cardList" && <CardList game={game} onChange={setGame} />}
+        {page === "cardList" && <CardList game={game} onChange={setGame} onNotify={notify} />}
         {page === "relationships" && relationships}
         {page === "logs" && <section className="panel"><div className="section-head"><h2>冒险日志</h2><button className="ghost danger-text" onClick={() => setConfirm({ title: "清空日志", message: "确定清空全部日志吗？", action: () => setGame({ ...game, logs: [] }) })}>清空日志</button></div><AdventureLog logs={game.logs} /></section>}
         {page === "achievements" && achievements}
-        {page === "settings" && <SettingsPanel game={game} onChange={setGame} onImport={(text) => { try { setGame(importSave(text)); notify("存档导入成功"); } catch { notify("导入失败：存档格式不正确"); } }} onGrantTestCrystals={() => { updateGame((state) => ({ ...state, player: { ...state.player, crystals: state.player.crystals + TEST_CRYSTAL_GRANT } })); notify("已补充 300,000 测试水晶"); }} onReset={() => setConfirm({ title: "重置全部数据", message: "这会删除当前浏览器里的全部存档，确定继续吗？", action: () => { setGame(resetGame()); notify("游戏已重置"); } })} />}
+        {page === "settings" && <SettingsPanel game={game} onChange={setGame} onImport={(text) => { try { setGame(importSave(text)); notify("存档导入成功"); } catch { notify("导入失败：存档格式不正确"); } }} onGrantTestCrystals={() => { updateGame((state) => ({ ...state, player: { ...state.player, crystals: state.player.crystals + TEST_CRYSTAL_GRANT } })); notify("已补充 300,000 测试水晶"); }} onGrantTestMaterials={() => { updateGame((state) => ({ ...state, player: { ...state.player, practiceScore: state.player.practiceScore + 100000, miracleGems: state.player.miracleGems + 500, wishPieces: state.player.wishPieces + 50000 } })); notify("已补充测试养成材料"); }} onReset={() => setConfirm({ title: "重置全部数据", message: "这会删除当前浏览器里的全部存档，确定继续吗？", action: () => { setGame(resetGame()); notify("游戏已重置"); } })} />}
       </main>
       {taskModal && <AddTaskModal task={taskModal === "new" ? undefined : taskModal} onClose={() => setTaskModal(null)} onSave={(task) => { updateGame((state) => upsertTask(state, task)); setTaskModal(null); notify("任务已保存"); }} />}
       {characterModal && <CharacterDetailModal character={characterModal === "new" ? undefined : characterModal} interactions={characterModal === "new" ? [] : game.interactions.filter((item) => item.characterId === characterModal.id)} onClose={() => setCharacterModal(null)} onSave={(character) => { updateGame((state) => upsertCharacter(state, character)); setCharacterModal(null); notify("人物已保存"); }} onDelete={(id) => setConfirm({ title: "删除人物", message: "会同时删除此人物的互动记录，确定继续吗？", action: () => { updateGame((state) => deleteCharacter(state, id)); setCharacterModal(null); notify("人物已删除"); } })} onInteract={(interaction) => { updateGame((state) => addInteraction(state, interaction)); notify("互动已记录"); }} />}

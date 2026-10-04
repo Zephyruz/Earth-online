@@ -1,0 +1,75 @@
+name: Deploy Earth Online sites to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - experiment/pjsk-life-loop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main site
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: main-site
+
+      - name: Checkout experiment site
+        uses: actions/checkout@v6
+        with:
+          ref: experiment/pjsk-life-loop
+          path: experiment-site
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            main-site/package-lock.json
+            experiment-site/package-lock.json
+
+      - name: Build main site
+        working-directory: main-site
+        run: npm ci && npm run build
+        env:
+          DEPLOY_BASE_PATH: /Earth-online/
+
+      - name: Build experiment site
+        working-directory: experiment-site
+        run: npm ci && npm run build
+        env:
+          DEPLOY_BASE_PATH: /Earth-online/experiment/
+
+      - name: Assemble Pages artifact
+        run: |
+          mkdir -p public/experiment
+          cp -a main-site/dist/. public/
+          cp -a experiment-site/dist/. public/experiment/
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./public
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

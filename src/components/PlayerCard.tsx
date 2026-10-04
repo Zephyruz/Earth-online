@@ -13,7 +13,10 @@ export const PlayerCard = ({ player }: { player: Player }) => (
       <div className="resource-row">
         <span>Lv.{player.level}</span>
         <span>EXP {player.exp}/{requiredExp(player.level)}</span>
-        <span>水晶 {player.crystals.toLocaleString()}</span>
+        <span>◇ 水晶 {player.crystals.toLocaleString()}</span>
+        <span>♫ 乐谱 {player.practiceScore.toLocaleString()}</span>
+        <span>✧ 结晶 {player.miracleGems}</span>
+        <span>◇ 碎片 {player.wishPieces}</span>
         <span>限定券 {player.limitedVouchers}</span>
       </div>
       <div className="bar exp"><span style={{ width: `${Math.min(100, (player.exp / requiredExp(player.level)) * 100)}%` }} /></div>
