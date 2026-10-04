@@ -431,22 +431,33 @@ textarea { min-height: 86px; resize: vertical; }
 }
 
 @media (max-width: 840px) {
-  .app { grid-template-columns: 1fr; padding-bottom: 74px; }
-  main { padding: 16px; }
+  body { min-width: 0; overscroll-behavior-y: none; }
+  .app { grid-template-columns: 1fr; padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .app::before { display: none; }
+  main { min-width: 0; padding: 14px 12px 20px; }
   .sidebar {
     position: fixed;
     z-index: 10;
     inset: auto 0 0;
     height: auto;
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 2px;
-    padding: 8px;
+    display: flex;
+    gap: 4px;
+    padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
     border-right: 0;
     border-top: 1px solid rgba(255,255,255,.8);
   }
+  .sidebar::-webkit-scrollbar { display: none; }
   .brand { display: none; }
-  .sidebar button { justify-content: center; padding: 9px 4px; font-size: 12px; gap: 3px; flex-direction: column; margin: 0; }
+  .sidebar button { flex: 0 0 68px; min-height: 58px; justify-content: center; padding: 7px 5px; font-size: 11px; line-height: 1.15; gap: 4px; flex-direction: column; margin: 0; scroll-snap-align: center; white-space: nowrap; touch-action: manipulation; }
+  .sidebar button span { font-size: 18px; line-height: 1; }
+  .topbar { gap: 10px; margin-bottom: 14px; }
+  .topbar .system-tip { max-width: none; padding: 10px 12px; font-size: 13px; }
+  .panel { padding: 15px; }
+  button, .file-button { min-height: 44px; touch-action: manipulation; }
   .topbar, .section-head, .task-card { align-items: stretch; flex-direction: column; }
   .page-grid, .player-card, .gacha-stage, .banner-hero, .collection-tools { grid-template-columns: 1fr; }
   .card-list-filters { grid-template-columns: 1fr 1fr; }.card-list-filters input { grid-column: 1 / -1; }
@@ -473,6 +484,25 @@ textarea { min-height: 86px; resize: vertical; }
   .result-card { font-size: 12px; }
   .modal.card-detail-modal { width: 100vw; height: 100dvh; max-height: none; grid-template-columns: 1fr; align-content: center; gap: 18px; padding: 56px 14px 24px; border: 0; border-radius: 0; overflow: auto; }
   .card-detail-copy { text-align: center; }.card-detail-tags, .art-toggle { justify-content: center; }
+}
+
+@media (max-width: 420px) {
+  h1 { font-size: 25px; }
+  .eyebrow { margin-bottom: 5px; }
+  .topbar .system-tip { display: none; }
+  .resource-row { gap: 5px; }
+  .banner-hero { min-height: 0; padding: 18px 15px; }
+  .banner-hero h2 { font-size: 30px; }
+  .card-grid.mini, .gacha-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .featured-strip, .collection-grid, .card-grid:not(.mini) { grid-template-columns: 1fr; }
+  .card-list-filters { grid-template-columns: 1fr; }
+  .card-list-filters input { grid-column: auto; }
+  .modal { padding: 16px; }
+  .modal.card-detail-modal { padding-inline: 10px; }
+}
+
+@media (hover: none) {
+  button:hover, .file-button:hover { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
