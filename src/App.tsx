@@ -153,9 +153,11 @@ export default function App() {
       <div className="quest-economy-strip"><span>今日完成 <strong>{todayTasks.filter((task) => task.completed).length}/{todayTasks.length}</strong></span><span>今日获得 <strong>◇ {game.statistics.todayCrystals}</strong></span><span>养成库存 <strong>♫ {game.player.practiceScore.toLocaleString()} · ✧ {game.player.miracleGems}</strong></span></div>
       <div className="filters">
         <select aria-label="筛选任务类型" value={taskType} onChange={(e) => setTaskType(e.target.value as "all" | TaskType)}><option value="all">全部类型</option>{taskOrder.map((type) => <option key={type} value={type}>{taskTypeLabels[type]}</option>)}</select>
-        <select aria-label="筛选任务领域" value={taskCategory} onChange={(e) => setTaskCategory(e.target.value as "all" | TaskCategory)}><option value="all">全部领域</option>{Object.entries(taskCategoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
         <select aria-label="筛选任务状态" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value as "all" | "todo" | "done")}><option value="all">全部状态</option><option value="todo">未完成</option><option value="done">已完成</option></select>
-        <select aria-label="任务排序方式" value={sort} onChange={(e) => setSort(e.target.value)}><option value="created">创建时间</option><option value="difficulty">难度</option><option value="reward">奖励</option><option value="deadline">截止日期</option></select>
+        <details className="filter-disclosure"><summary>更多筛选</summary><div className="advanced-filters">
+          <select aria-label="筛选任务领域" value={taskCategory} onChange={(e) => setTaskCategory(e.target.value as "all" | TaskCategory)}><option value="all">全部领域</option>{Object.entries(taskCategoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+          <select aria-label="任务排序方式" value={sort} onChange={(e) => setSort(e.target.value)}><option value="created">创建时间</option><option value="difficulty">难度</option><option value="reward">奖励</option><option value="deadline">截止日期</option></select>
+        </div></details>
       </div>
       <TaskList tasks={filteredTasks} onComplete={(id) => { updateGame((state) => completeTask(state, id)); notify("任务完成，奖励已发放"); }} onAdvance={(id) => { updateGame((state) => advanceTaskProgress(state, id)); notify("任务进度已推进"); }} onUndo={(id) => { updateGame((state) => undoTask(state, id)); notify("已撤销任务奖励"); }} onEdit={setTaskModal} onDelete={(id) => setConfirm({ title: "删除任务", message: "确定删除这个任务吗？", action: () => { updateGame((state) => deleteTask(state, id)); notify("任务已删除"); } })} />
     </section>

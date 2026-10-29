@@ -75,6 +75,7 @@ main { padding: 26px; overflow: hidden; }
   box-shadow: none;
 }
 .sidebar button.active { background: rgba(255,255,255,.82); color: #f05f9d; box-shadow: 0 8px 24px rgba(255, 127, 184, .16); }
+.mobile-more { display: none; }
 .topbar { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-bottom: 18px; }
 h1, h2, h3, h4, p { margin-top: 0; }
 h1 { font-size: clamp(24px, 4vw, 40px); margin-bottom: 0; }
@@ -166,7 +167,15 @@ h1 { font-size: clamp(24px, 4vw, 40px); margin-bottom: 0; }
 .character-collection-card > div:last-child > span i, .collection-progress i, .training-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ff75b5, #75c9ff); }
 .character-cover { overflow: hidden; border-radius: 8px; }.character-cover .card-art { height: 82px; border: 0; border-radius: 8px; }.character-cover.is-locked { filter: grayscale(1) brightness(.78); opacity: .62; }
 .collection-progress { height: 10px; margin: 14px 0 20px; }.back-button { margin-bottom: 12px; }
-.card-list-filters { display: grid; grid-template-columns: minmax(200px, 1.4fr) repeat(4, minmax(125px, .7fr)); gap: 9px; margin: 16px 0 20px; }.card-list-filters input, .card-list-filters select { min-width: 0; padding: 10px 11px; border: 1px solid rgba(143,121,176,.22); border-radius: 8px; background: rgba(255,255,255,.82); color: #554663; }
+.card-list-filters { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(150px, .45fr); gap: 9px; margin: 16px 0 20px; }.card-list-filters input, .card-list-filters select { min-width: 0; padding: 10px 11px; border: 1px solid rgba(143,121,176,.22); border-radius: 8px; background: rgba(255,255,255,.82); color: #554663; }
+.filter-disclosure { min-width: 0; }
+.filter-disclosure > summary { width: fit-content; padding: 9px 12px; border: 1px solid rgba(143,121,176,.2); border-radius: 8px; color: #705b82; background: rgba(255,255,255,.7); cursor: pointer; list-style: none; }
+.filter-disclosure > summary::-webkit-details-marker { display: none; }
+.filter-disclosure > summary::after { content: " ＋"; }
+.filter-disclosure[open] > summary::after { content: " －"; }
+.advanced-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.advanced-filters select { min-width: 140px; }
+.card-list-filters .filter-disclosure { grid-column: 1 / -1; }
 .gacha-backdrop { padding: 8px; background: rgba(15, 10, 31, .78); backdrop-filter: blur(8px); }
 .modal.gacha-cinematic {
   position: relative;
@@ -496,7 +505,7 @@ textarea { min-height: 86px; resize: vertical; }
 .task-basics-grid { margin-bottom: 6px; }
 
 .member-wallet { margin-top: 4px; }
-.card-list-filters { grid-template-columns: minmax(190px, 1.4fr) repeat(5, minmax(108px, .68fr)) auto; }
+.card-list-filters { grid-template-columns: minmax(200px, 1fr) minmax(150px, .45fr); }
 .filter-favorite { white-space: nowrap; }
 .filter-favorite.active { color: white; background: linear-gradient(135deg, #ff6fab, #8a70dc); }
 .featured-actions { display: grid; grid-template-columns: 1fr auto; gap: 7px; margin-top: 10px; }
@@ -539,8 +548,7 @@ textarea { min-height: 86px; resize: vertical; }
     display: flex;
     gap: 4px;
     padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
+    overflow: visible;
     scrollbar-width: none;
     scroll-snap-type: x proximity;
     border-right: 0;
@@ -548,22 +556,46 @@ textarea { min-height: 86px; resize: vertical; }
   }
   .sidebar::-webkit-scrollbar { display: none; }
   .brand { display: none; }
-  .sidebar button { flex: 0 0 68px; min-height: 58px; justify-content: center; padding: 7px 5px; font-size: 11px; line-height: 1.15; gap: 4px; flex-direction: column; margin: 0; scroll-snap-align: center; white-space: nowrap; touch-action: manipulation; }
+  .sidebar > .secondary-nav-item { display: none; }
+  .sidebar > .primary-nav-item, .sidebar > .mobile-more { flex: 1 1 20%; min-width: 0; }
+  .mobile-more { position: static; display: block; }
+  .sidebar button { min-height: 58px; justify-content: center; padding: 7px 4px; font-size: 11px; line-height: 1.15; gap: 4px; flex-direction: column; margin: 0; scroll-snap-align: center; white-space: nowrap; touch-action: manipulation; }
   .sidebar button span { font-size: 18px; line-height: 1; }
+  .mobile-more > button { width: 100%; }
+  .mobile-more-menu { position: absolute; z-index: 20; left: 8px; right: 8px; bottom: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 10px; border: 1px solid rgba(255,255,255,.9); border-radius: 14px; background: rgba(255,250,253,.96); box-shadow: 0 -12px 35px rgba(71,50,93,.18); backdrop-filter: blur(18px); }
+  .mobile-more-menu button { width: auto; min-height: 54px; color: #665575; }
   .topbar { gap: 10px; margin-bottom: 14px; }
-  .topbar .system-tip { max-width: none; padding: 10px 12px; font-size: 13px; }
+  .topbar .system-tip { display: none; }
   .panel { padding: 15px; }
   button, .file-button { min-height: 44px; touch-action: manipulation; }
   .topbar, .section-head, .task-card { align-items: stretch; flex-direction: column; }
-  .page-grid, .player-card, .gacha-stage, .banner-hero, .collection-tools, .oshi-panel { grid-template-columns: 1fr; }
-  .planner-add { grid-template-columns: 1fr; }
+  .page-grid, .gacha-stage, .banner-hero, .collection-tools, .oshi-panel { grid-template-columns: 1fr; }
+  .planner-add, .planner-grid { grid-template-columns: 1fr; }
   .home-dashboard .player-card { grid-column: auto; }
+  .home-dashboard .oshi-panel, .home-dashboard .run-stats, .home-dashboard .recent-adventure { display: none; }
+  .player-card { grid-template-columns: auto 1fr; gap: 12px; }
+  .player-card .avatar { width: 42px; height: 42px; }
+  .player-card .attribute-grid { display: none; }
+  .player-card .resource-row span:nth-child(n+5) { display: none; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .stats-grid div { min-height: 72px; padding: 11px; }
+  .stats-grid strong { font-size: 20px; }
+  .filters { align-items: stretch; }
+  .filters > select { flex: 1 1 calc(50% - 4px); min-width: 0; }
+  .filters > .filter-disclosure { flex: 1 1 100%; }
+  .advanced-filters { display: grid; grid-template-columns: 1fr 1fr; }
+  .advanced-filters select, .advanced-filters button { min-width: 0; width: 100%; }
+  .task-card .chips span:nth-child(n+6) { display: none; }
   .oshi-art { min-height: 220px; max-height: 260px; }
   .oshi-art .card-art::after { background: linear-gradient(180deg, transparent 65%, rgba(47,30,74,.88)); }
   .oshi-copy { margin-top: -64px; padding: 20px; }
-  .card-list-filters { grid-template-columns: 1fr 1fr; }
-  .filter-favorite { grid-column: 1 / -1; }
-  .card-list-filters { grid-template-columns: 1fr 1fr; }.card-list-filters input { grid-column: 1 / -1; }
+  .card-list-filters { grid-template-columns: 1fr; }
+  .card-list-filters input, .card-list-filters .filter-disclosure { grid-column: auto; }
+  .owned-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .owned-card-grid .collection-card { padding: 7px; }
+  .owned-card-grid .collection-meta { padding: 7px 2px 2px; }
+  .owned-card-grid .collection-meta h3 { font-size: 14px; }
+  .owned-card-grid .collection-meta p, .owned-card-grid .collection-meta b { font-size: 11px; }
   .character-collection-grid { grid-template-columns: 1fr; }
   .magic-circle { margin: auto; }
   .gacha-backdrop { padding: 0; }
@@ -585,8 +617,14 @@ textarea { min-height: 86px; resize: vertical; }
   .gacha-summary .section-head { flex-direction: row; align-items: center; }
   .gacha-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .result-card { font-size: 12px; }
-  .modal.card-detail-modal { width: 100vw; height: 100dvh; max-height: none; grid-template-columns: 1fr; align-content: center; gap: 18px; padding: 56px 14px 24px; border: 0; border-radius: 0; overflow: auto; }
-  .card-detail-copy { text-align: center; }.card-detail-tags, .art-toggle { justify-content: center; }
+  .card-detail-backdrop { padding: 0; }
+  .modal.card-detail-modal { width: 100vw; height: 100dvh; max-height: none; grid-template-columns: 1fr; align-content: start; gap: 14px; padding: 58px 14px calc(28px + env(safe-area-inset-bottom)); border: 0; border-radius: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .card-detail-art { width: 100%; max-width: 680px; margin: 0 auto; }
+  .card-detail-art .card-art { max-height: 42vh; }
+  .card-detail-copy { width: 100%; max-width: 680px; margin: 0 auto; text-align: left; }
+  .card-detail-copy h2 { font-size: 27px; }
+  .card-detail-tags, .art-toggle { justify-content: flex-start; }
+  .member-detail-kicker { padding-right: 42px; }
 }
 
 @media (max-width: 420px) {
@@ -598,8 +636,8 @@ textarea { min-height: 86px; resize: vertical; }
   .banner-hero h2 { font-size: 30px; }
   .card-grid.mini, .gacha-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .featured-strip, .collection-grid, .card-grid:not(.mini) { grid-template-columns: 1fr; }
-  .card-list-filters { grid-template-columns: 1fr; }
-  .card-list-filters input, .filter-favorite { grid-column: auto; }
+  .owned-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .advanced-filters { grid-template-columns: 1fr; }
   .modal { padding: 16px; }
   .modal.card-detail-modal { padding-inline: 10px; }
 }

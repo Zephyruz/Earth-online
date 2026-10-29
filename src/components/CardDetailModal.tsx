@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CardDefinition, OwnedCard, Player } from "../types/game";
 import { baseMaxLevel, currentCardLevel, currentMasteryRank, levelUpPreview, masteryCost, maxCardLevel, trainingCost } from "../utils/cardProgress";
 import { CardArt } from "./CardArt";
@@ -28,12 +29,19 @@ export const CardDetailModal = ({ card, onClose, owned, trainedUnlocked = true, 
 
   useEffect(() => setTrained(false), [card.id]);
   useEffect(() => { if (!trainedUnlocked && trained) setTrained(false); }, [trained, trainedUnlocked]);
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", closeOnEscape); };
+  }, [onClose]);
 
-  return <div className="modal-backdrop card-detail-backdrop" onMouseDown={onClose}>
+  return createPortal(<div className="modal-backdrop card-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${card.character} ${card.title} 卡牌详情`} onMouseDown={onClose}>
     <div className="modal card-detail-modal" onMouseDown={(event) => event.stopPropagation()}>
       <button className="card-detail-close ghost" onClick={onClose} aria-label="关闭卡牌详情">×</button>
       <div className={`card-detail-art ${trained ? "show-trained" : "show-normal"}`}>
-        <CardArt card={card} trained={trained} />
+        <CardArt card={card} trained={trained} eager />
       </div>
       <div className="card-detail-copy">
         <div className="member-detail-kicker"><p className="eyebrow">MEMBER DETAIL</p>{owned && onFavorite && <button className={`favorite-button ${owned.favorite ? "is-favorite" : ""}`} onClick={onFavorite}>{owned.favorite ? "♥ 已收藏" : "♡ 收藏"}</button>}</div>
@@ -58,5 +66,5 @@ export const CardDetailModal = ({ card, onClose, owned, trainedUnlocked = true, 
         </div>}
       </div>
     </div>
-  </div>;
+  </div>, document.body);
 };
