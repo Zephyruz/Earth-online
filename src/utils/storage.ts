@@ -1,4 +1,4 @@
-import { ACTIVE_BANNER_ID, cardPool, createDefaultGame, defaultAchievements, taskRewardPreset } from "../data/defaults";
+import { ACTIVE_BANNER_ID, cardPool, createDefaultGame, defaultAchievements, inferTaskCategory, taskRewardPreset } from "../data/defaults";
 import { GameState } from "../types/game";
 
 const STORAGE_KEY = "earth-online-solo-save";
@@ -12,7 +12,7 @@ const isGameState = (value: unknown): value is GameState => {
 };
 
 const migrate = (raw: Legacy): GameState => {
-  if (raw.version === "0.3.0" && isGameState(raw)) return raw;
+  if (raw.version === "0.4.2" && isGameState(raw)) return raw;
   const fresh = createDefaultGame(); const oldPlayer = raw.player ?? {}; const oldStats = raw.statistics ?? {};
   const pilotHistory = raw.version === "0.2.0" && Array.isArray(raw.gachaHistory) ? raw.gachaHistory.filter((item: Legacy) => PILOT_CARD_IDS.has(item.cardId)) : [];
   const refundedPulls = pilotHistory.length;
@@ -20,9 +20,10 @@ const migrate = (raw: Legacy): GameState => {
   const pilotAchievement = refundedPulls > 0 && (raw.achievements ?? []).some((item: Legacy) => item.id === "crystal_3000" && item.unlocked);
   const achievements = defaultAchievements().map((next) => { const previous = (raw.achievements ?? []).find((item: Legacy) => item.id === next.id || (next.id === "crystal_3000" && item.id === "gold_500") || (next.id === "first_four_star" && item.id === "first_ssr")); return previous ? { ...next, unlocked: Boolean(previous.unlocked), unlockedAt: previous.unlockedAt } : next; });
   if (pilotAchievement) { const item = achievements.find((achievement) => achievement.id === "crystal_3000"); if (item) { item.unlocked = false; item.unlockedAt = undefined; } }
-  const convertedCrystals = raw.version === "0.2.0" || raw.version === "0.2.1" || raw.version === "0.3.0"
-    ? Number(oldPlayer.crystals ?? 15000)
-    : Math.max(15000, Number(oldPlayer.crystals ?? 0), Number(oldPlayer.gold ?? 0) * 100 + Number(oldPlayer.tickets ?? 0) * 300);
+  const legacyCrystals = raw.version === "0.2.0" || raw.version === "0.2.1" || raw.version === "0.3.0"
+    ? Number(oldPlayer.crystals ?? 900)
+    : Math.max(900, Number(oldPlayer.crystals ?? 0), Number(oldPlayer.gold ?? 0) * 100 + Number(oldPlayer.tickets ?? 0) * 300);
+  const convertedCrystals = legacyCrystals >= 100_000 ? 3_000 : legacyCrystals;
   const migratedOwnedCards = (raw.ownedCards ?? []).filter((item: Legacy) => !PILOT_CARD_IDS.has(item.cardId)).map((item: Legacy) => ({ ...item, level: Number(item.level ?? 1), trained: Boolean(item.trained), masteryRank: Number(item.masteryRank ?? 0), favorite: Boolean(item.favorite) }));
   const migratedWishPieces = migratedOwnedCards.reduce((sum: number, item: Legacy) => {
     const rarity = cardPool.find((card) => card.id === item.cardId)?.rarity;
@@ -30,9 +31,10 @@ const migrate = (raw: Legacy): GameState => {
     return sum + Math.max(0, Number(item.count ?? 1) - 1) * perDuplicate;
   }, 0);
   return {
-    ...fresh, ...raw, version: "0.3.0",
+    ...fresh, ...raw, version: "0.4.2",
     player: { ...fresh.player, ...oldPlayer, crystals: convertedCrystals + refundedPulls * 300 - (pilotAchievement ? 300 : 0), practiceScore: Number(oldPlayer.practiceScore ?? fresh.player.practiceScore), miracleGems: Number(oldPlayer.miracleGems ?? fresh.player.miracleGems), wishPieces: Number(oldPlayer.wishPieces ?? migratedWishPieces), limitedVouchers: Number(oldPlayer.limitedVouchers ?? 0), standardVouchers: Number(oldPlayer.standardVouchers ?? 0), gold: undefined, tickets: undefined },
-    tasks: (raw.tasks ?? fresh.tasks).map((task: Legacy) => { const preset = taskRewardPreset(task.type ?? "daily", task.difficulty ?? "normal", task.target); return { ...task, crystalReward: Number(task.crystalReward ?? (typeof task.goldReward === "number" ? task.goldReward * 10 : preset.crystalReward)), expReward: Number(task.expReward ?? preset.expReward), practiceReward: Number(task.practiceReward ?? preset.practiceReward), miracleGemReward: Number(task.miracleGemReward ?? preset.miracleGemReward), goldReward: undefined, ticketReward: undefined }; }),
+    tasks: (raw.tasks ?? fresh.tasks).map((task: Legacy) => { const preset = taskRewardPreset(task.type ?? "daily", task.difficulty ?? "normal", task.target); const category = !task.category || (/^0\.4\./.test(raw.version ?? "") && task.category === "personal") ? inferTaskCategory(task.title ?? "") : task.category; return { ...task, category, tags: Array.isArray(task.tags) ? task.tags : [], crystalReward: preset.crystalReward, expReward: Number(task.expReward ?? preset.expReward), practiceReward: Number(task.practiceReward ?? preset.practiceReward), miracleGemReward: Number(task.miracleGemReward ?? preset.miracleGemReward), goldReward: undefined, ticketReward: undefined }; }),
+    plannerEntries: Array.isArray(raw.plannerEntries) ? raw.plannerEntries : [],
     ownedCards: migratedOwnedCards, dailyLive: raw.dailyLive?.date === fresh.dailyLive.date ? { date: raw.dailyLive.date, claimedMilestones: Array.isArray(raw.dailyLive.claimedMilestones) ? raw.dailyLive.claimedMilestones : [] } : fresh.dailyLive, bannerStickers: { ...(raw.bannerStickers ?? {}), [ACTIVE_BANNER_ID]: Math.max(0, Number(raw.bannerStickers?.[ACTIVE_BANNER_ID] ?? 0) - refundedPulls) }, bannerVoucherExchanges: raw.bannerVoucherExchanges ?? { [ACTIVE_BANNER_ID]: 0 }, achievements,
     gachaHistory: Array.isArray(raw.gachaHistory) && raw.gachaHistory.every((item: Legacy) => item.cardId) ? raw.gachaHistory.filter((item: Legacy) => !PILOT_CARD_IDS.has(item.cardId)) : [],
     logs: (raw.logs ?? fresh.logs).filter((item: Legacy) => !(refundedPulls > 0 && ((item.type === "gacha" && ["首次获得，已登录图鉴。", "重复获得，收藏计数 +1。"].includes(item.description)) || (pilotAchievement && item.title === "解锁成就《一发十连》")))),

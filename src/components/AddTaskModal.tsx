@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { AttributeKey, Task, TaskType } from "../types/game";
+import { AttributeKey, Task, TaskCategory, TaskType } from "../types/game";
 import { uid } from "../utils/math";
 import { nowIso } from "../utils/date";
-import { attributeLabels, taskRewardPreset } from "../data/defaults";
+import { attributeLabels, taskCategoryLabels, taskRewardPreset } from "../data/defaults";
 
 interface Props {
   task?: Task;
@@ -19,6 +19,8 @@ export const AddTaskModal = ({ task, onClose, onSave }: Props) => {
     title: "",
     description: "",
     type: "daily",
+    category: "personal",
+    tags: [],
     completed: false,
     createdAt: nowIso(),
     ...initialRewards,
@@ -53,7 +55,10 @@ export const AddTaskModal = ({ task, onClose, onSave }: Props) => {
           <label>难度<select value={draft.difficulty} onChange={(e) => setDraft({ ...draft, difficulty: e.target.value as Task["difficulty"] })}>
             <option value="easy">轻量</option><option value="normal">标准</option><option value="hard">挑战</option>
           </select></label>
+          <label>领域<select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as TaskCategory })}>{Object.entries(taskCategoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label>目标次数<input type="number" min="0" value={draft.target ?? 0} onChange={(e) => { const target = Number(e.target.value) || undefined; setDraft({ ...draft, target, progress: target ? Math.min(draft.progress ?? 0, target) : undefined }); }} /></label>
+          <label>截止日期<input type="date" value={draft.deadline ?? ""} onChange={(e) => setDraft({ ...draft, deadline: e.target.value || undefined })} /></label>
+          <label>标签<input value={(draft.tags ?? []).join("，")} onChange={(e) => setDraft({ ...draft, tags: e.target.value.split(/[,，]/).map((tag) => tag.trim()).filter(Boolean) })} placeholder="例如：工作，紧急" /></label>
         </div>
         <div className="reward-editor-head"><div><p className="eyebrow">QUEST REWARDS</p><strong>任务奖励</strong></div><button className="ghost" type="button" onClick={applyRecommendedRewards}>按类型与难度推荐</button></div>
         <div className="form-grid reward-form-grid">

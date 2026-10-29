@@ -1,4 +1,4 @@
-import { attributeLabels, taskTypeLabels } from "../data/defaults";
+import { attributeLabels, taskCategoryLabels, taskTypeLabels } from "../data/defaults";
 import { Task } from "../types/game";
 
 interface Props {
@@ -23,6 +23,9 @@ export const TaskCard = ({ task, onComplete, onAdvance, onUndo, onEdit, onDelete
       {task.target && <div className="task-progress"><div><span>进度</span><strong>{task.progress ?? 0} / {task.target}</strong></div><div className="bar"><span style={{ width: `${((task.progress ?? 0) / task.target) * 100}%` }} /></div></div>}
       <div className="chips">
         <span>{difficultyLabels[task.difficulty]}</span>
+        <span>{taskCategoryLabels[task.category]}</span>
+        {task.deadline && <span>截止 {task.deadline}</span>}
+        {(task.tags ?? []).map((tag) => <span key={tag}>#{tag}</span>)}
         <span>水晶 +{task.crystalReward}</span>
         <span>乐谱 +{task.practiceReward}</span>
         {task.miracleGemReward > 0 && <span>结晶 +{task.miracleGemReward}</span>}

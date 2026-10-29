@@ -20,7 +20,7 @@ export const normalizeGameDates = (state: GameState): GameState => {
 
 export const addExpAndLevel = (state: GameState, exp: number) => {
   state.player.exp += exp;
-  while (state.player.exp >= requiredExp(state.player.level)) { state.player.exp -= requiredExp(state.player.level); state.player.level += 1; state.player.crystals += 500; state.statistics.totalCrystalsEarned += 500; state.player.attributes.energy = clamp(state.player.attributes.energy + 10); state.player.attributes.mood = clamp(state.player.attributes.mood + 10); log(state, "level", `等级提升至 Lv.${state.player.level}`, "获得水晶 ×500，体力和心情轻微恢复。"); }
+  while (state.player.exp >= requiredExp(state.player.level)) { state.player.exp -= requiredExp(state.player.level); state.player.level += 1; state.player.crystals += 100; state.statistics.totalCrystalsEarned += 100; state.player.attributes.energy = clamp(state.player.attributes.energy + 10); state.player.attributes.mood = clamp(state.player.attributes.mood + 10); log(state, "level", `等级提升至 Lv.${state.player.level}`, "获得水晶 ×100，体力和心情轻微恢复。"); }
 };
 
 export const upsertTask = (state: GameState, task: Task): GameState => { const next = structuredClone(state); const index = next.tasks.findIndex((item) => item.id === task.id); if (index >= 0) next.tasks[index] = task; else next.tasks.unshift(task); log(next, "task", index >= 0 ? "任务已编辑" : "新增任务", task.title); return next; };
@@ -133,7 +133,7 @@ export const exchangeFeaturedCard = (state: GameState, cardId: string): GameStat
 
 export const checkIn = (state: GameState): GameState => {
   const next = structuredClone(state); const today = todayKey(); if (next.player.lastCheckInDate === today) return next; next.player.currentStreak = isYesterday(next.player.lastCheckInDate) ? next.player.currentStreak + 1 : 1; next.player.bestStreak = Math.max(next.player.bestStreak, next.player.currentStreak); next.player.lastCheckInDate = today;
-  let crystals = 200; if (next.player.currentStreak % 30 === 0) crystals += 3000; else if (next.player.currentStreak % 14 === 0) crystals += 1000; else if (next.player.currentStreak % 7 === 0) crystals += 500; else if (next.player.currentStreak % 3 === 0) crystals += 300;
+  let crystals = 20; if (next.player.currentStreak % 30 === 0) crystals += 500; else if (next.player.currentStreak % 14 === 0) crystals += 200; else if (next.player.currentStreak % 7 === 0) crystals += 100; else if (next.player.currentStreak % 3 === 0) crystals += 30;
   next.player.crystals += crystals; next.statistics.totalCrystalsEarned += crystals; next.statistics.todayCrystals += crystals; next.statistics.todayExp += 10; addExpAndLevel(next, 10); log(next, "system", "今日签到完成", `连续签到 ${next.player.currentStreak} 天，获得水晶 ×${crystals}、经验 ×10。`); return checkAchievements(next);
 };
 

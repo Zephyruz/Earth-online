@@ -3,6 +3,7 @@ import { PageKey } from "../types/game";
 const pages: { key: PageKey; label: string; icon: string }[] = [
   { key: "home", label: "首页", icon: "⌂" },
   { key: "tasks", label: "任务", icon: "✓" },
+  { key: "planner", label: "计划收集", icon: "▤" },
   { key: "gacha", label: "抽卡", icon: "✦" },
   { key: "collection", label: "图鉴", icon: "▣" },
   { key: "cardList", label: "卡牌一览", icon: "◇" },

@@ -517,6 +517,14 @@ textarea { min-height: 86px; resize: vertical; }
 .single-card-copy b { color: #ffe69d; font-size: 12px; }
 
 .toast { border-radius: 12px; background: linear-gradient(135deg, #6856ce, #d65d9a); }
+.import-textarea { min-height: 220px; margin-top: 14px; font-family: ui-monospace, Consolas, monospace; line-height: 1.6; }
+.planner-add { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 10px; margin: 18px 0; }
+.planner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 16px; }
+.planner-entry { display: grid; gap: 10px; }
+.planner-entry .section-head { margin: 0; }
+.planner-kind { display: inline-flex; width: fit-content; padding: 5px 9px; border-radius: 999px; color: #6652b8; background: rgba(112,91,202,.12); font-size: 12px; font-weight: 700; }
+.planner-title { font-size: 17px; font-weight: 700; }
+.planner-entry textarea { min-height: 86px; }
 
 @media (max-width: 840px) {
   body { min-width: 0; overscroll-behavior-y: none; }
@@ -548,6 +556,7 @@ textarea { min-height: 86px; resize: vertical; }
   button, .file-button { min-height: 44px; touch-action: manipulation; }
   .topbar, .section-head, .task-card { align-items: stretch; flex-direction: column; }
   .page-grid, .player-card, .gacha-stage, .banner-hero, .collection-tools, .oshi-panel { grid-template-columns: 1fr; }
+  .planner-add { grid-template-columns: 1fr; }
   .home-dashboard .player-card { grid-column: auto; }
   .oshi-art { min-height: 220px; max-height: 260px; }
   .oshi-art .card-art::after { background: linear-gradient(180deg, transparent 65%, rgba(47,30,74,.88)); }
